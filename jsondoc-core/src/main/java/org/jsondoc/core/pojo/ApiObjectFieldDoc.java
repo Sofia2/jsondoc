@@ -1,26 +1,100 @@
 package org.jsondoc.core.pojo;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
-import org.jsondoc.core.util.JSONDocType;
+import org.jsondoc.core.annotation.ApiObjectField;
+import org.jsondoc.core.util.JSONDocUtils;
 
-import com.google.common.base.Joiner;
-
-public class ApiObjectFieldDoc extends AbstractDoc implements Comparable<ApiObjectFieldDoc> {
-	public final String jsondocId = UUID.randomUUID().toString();
-	private JSONDocType jsondocType;
+public class ApiObjectFieldDoc {
+	public String jsondocId = UUID.randomUUID().toString();
 	private String name;
+	private String type;
+	private String multiple;
 	private String description;
-	private Set<String> format;
+	private String format;
 	private String[] allowedvalues;
-	private String required;
-	private ApiVersionDoc supportedversions;
-	private Integer order;
+	private String mapKeyObject;
+	private String mapValueObject;
+	private String map;
 
-	public ApiObjectFieldDoc() {
-		this.format = new LinkedHashSet<String>();
+	public static ApiObjectFieldDoc buildFromAnnotation(ApiObjectField annotation, Field field) {
+		ApiObjectFieldDoc apiPojoFieldDoc = new ApiObjectFieldDoc();
+		apiPojoFieldDoc.setName(field.getName());
+		apiPojoFieldDoc.setDescription(annotation.description());
+		String[] typeChecks = getFieldObject(field);
+		apiPojoFieldDoc.setType(typeChecks[0]);
+		apiPojoFieldDoc.setMultiple(String.valueOf(JSONDocUtils.isMultiple(field.getType())));
+		apiPojoFieldDoc.setFormat(annotation.format());
+		apiPojoFieldDoc.setAllowedvalues(annotation.allowedvalues());
+		apiPojoFieldDoc.setMapKeyObject(typeChecks[1]);
+		apiPojoFieldDoc.setMapValueObject(typeChecks[2]);
+		apiPojoFieldDoc.setMap(typeChecks[3]);
+		return apiPojoFieldDoc;
+	}
+
+	public static String[] getFieldObject(Field field) {
+		if (Map.class.isAssignableFrom(field.getType())) {
+			Class<?> mapKeyClazz = null;
+			Class<?> mapValueClazz = null;
+
+			if (field.getGenericType() instanceof ParameterizedType) {
+				ParameterizedType parameterizedType = (ParameterizedType) field.getGenericType();
+				Type mapKeyType = parameterizedType.getActualTypeArguments()[0];
+				Type mapValueType = parameterizedType.getActualTypeArguments()[1];
+				mapKeyClazz = (Class<?>) mapKeyType;
+				mapValueClazz = (Class<?>) mapValueType;
+			}
+			return new String[] { JSONDocUtils.getObjectNameFromAnnotatedClass(field.getType()), (mapKeyClazz != null) ? mapKeyClazz.getSimpleName().toLowerCase() : null, (mapValueClazz != null) ? mapValueClazz.getSimpleName().toLowerCase() : null, "map" };
+
+		} else if (Collection.class.isAssignableFrom(field.getType())) {
+			if (field.getGenericType() instanceof ParameterizedType) {
+				ParameterizedType parameterizedType = (ParameterizedType) field.getGenericType();
+				Type type = parameterizedType.getActualTypeArguments()[0];
+				if(type instanceof WildcardType) {
+					return new String[] { JSONDocUtils.WILDCARD, null, null, null };
+				}
+				Class<?> clazz = (Class<?>) type;
+				return new String[] { JSONDocUtils.getObjectNameFromAnnotatedClass(clazz), null, null, null };
+			} else {
+				return new String[] { JSONDocUtils.UNDEFINED, null, null, null };
+			}
+
+		} else if (field.getType().isArray()) {
+			Class<?> classArr = field.getType();
+			return new String[] { JSONDocUtils.getObjectNameFromAnnotatedClass(classArr.getComponentType()), null, null, null };
+
+		}
+		return new String[] { JSONDocUtils.getObjectNameFromAnnotatedClass(field.getType()), null, null, null };
+	}
+
+	public String getMapKeyObject() {
+		return mapKeyObject;
+	}
+
+	public void setMapKeyObject(String mapKeyObject) {
+		this.mapKeyObject = mapKeyObject;
+	}
+
+	public String getMapValueObject() {
+		return mapValueObject;
+	}
+
+	public void setMapValueObject(String mapValueObject) {
+		this.mapValueObject = mapValueObject;
+	}
+
+	public String getMap() {
+		return map;
+	}
+
+	public void setMap(String map) {
+		this.map = map;
 	}
 
 	public String[] getAllowedvalues() {
@@ -31,20 +105,20 @@ public class ApiObjectFieldDoc extends AbstractDoc implements Comparable<ApiObje
 		this.allowedvalues = allowedvalues;
 	}
 
-	public Set<String> getFormat() {
+	public String getFormat() {
 		return format;
 	}
-	
-	public String getDisplayedFormat() {
-		return Joiner.on(", ").join(format);
-	}
 
-	public void setFormat(Set<String> format) {
+	public void setFormat(String format) {
 		this.format = format;
 	}
-	
-	public void addFormat(String format) {
-		this.format.add(format);
+
+	public String getMultiple() {
+		return multiple;
+	}
+
+	public void setMultiple(String multiple) {
+		this.multiple = multiple;
 	}
 
 	public String getName() {
@@ -63,73 +137,16 @@ public class ApiObjectFieldDoc extends AbstractDoc implements Comparable<ApiObje
 		this.description = description;
 	}
 
-	public String getRequired() {
-		return required;
+	public String getType() {
+		return type;
 	}
 
-	public void setRequired(String required) {
-		this.required = required;
+	public void setType(String type) {
+		this.type = type;
 	}
 
-	public ApiVersionDoc getSupportedversions() {
-		return supportedversions;
-	}
-
-	public void setSupportedversions(ApiVersionDoc supportedversions) {
-		this.supportedversions = supportedversions;
-	}
-
-	public JSONDocType getJsondocType() {
-		return jsondocType;
-	}
-
-	public void setJsondocType(JSONDocType jsondocType) {
-		this.jsondocType = jsondocType;
-	}
-
-	public void setOrder(int order) {
-		this.order = order;
-	}
-
-	public Integer getOrder() {
-		return order;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		ApiObjectFieldDoc other = (ApiObjectFieldDoc) obj;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else if (!name.equals(other.name))
-			return false;
-		return true;
-	}
-
-	/**
-	 * This comparison is the same as the one in ApiObjectFieldDoc class 
-	 */
-	@Override
-	public int compareTo(ApiObjectFieldDoc o) {
-		if(this.getOrder().equals(o.getOrder())) {
-			return this.getName().compareTo(o.getName());
-		} else {
-			return this.getOrder() - o.getOrder();
-		}
+	public ApiObjectFieldDoc() {
+		super();
 	}
 
 }

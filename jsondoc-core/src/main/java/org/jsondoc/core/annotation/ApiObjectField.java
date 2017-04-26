@@ -20,7 +20,7 @@ public @interface ApiObjectField {
 	 * A drescription of what the field is
 	 * @return
 	 */
-	public String description() default "";
+	public String description();
 	
 	/**
 	 * The format pattern for this field
@@ -33,32 +33,5 @@ public @interface ApiObjectField {
 	 * @return
 	 */
 	public String[] allowedvalues() default {};
-	
-	/**
-	 * If the field is required
-	 * @return
-	 */
-	public boolean required() default false;
-	
-	/**
-	 * The display name for this field if different
-	 * from the java name
-	 * @return
-	 */
-	public String name() default "";
-
-	/**
-	 * Order of field in generated example.
-	 * @return
-	 */
-	public int order() default Integer.MAX_VALUE;
-
-	/**
-	 * Whether to process the template for this object or not. It's similar to what can be 
-	 * obtained using the JsonIdentityInfo/JsonManagedReference/JsonBackReference. Set this to true
-	 * to avoid StackOverflow when your object has a circular or self dependency.
-	 * @return
-	 */
-	public boolean processtemplate() default true; 
 
 }

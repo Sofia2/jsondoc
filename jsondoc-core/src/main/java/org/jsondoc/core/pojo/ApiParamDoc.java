@@ -1,42 +1,90 @@
 package org.jsondoc.core.pojo;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
-import org.jsondoc.core.annotation.ApiPathParam;
-import org.jsondoc.core.annotation.ApiQueryParam;
-import org.jsondoc.core.util.JSONDocType;
+import org.jsondoc.core.annotation.ApiParam;
+import org.jsondoc.core.util.JSONDocUtils;
 
-public class ApiParamDoc extends AbstractDoc implements Comparable<ApiParamDoc> {
-	public final String jsondocId = UUID.randomUUID().toString();
-	private JSONDocType jsondocType;
+public class ApiParamDoc {
+	public String jsondocId = UUID.randomUUID().toString();
 	private String name;
 	private String description;
+	private String type;
 	private String required;
 	private String[] allowedvalues;
 	private String format;
-	private String defaultvalue;
 
-	public ApiParamDoc(String name, String description, JSONDocType jsondocType, String required, String[] allowedvalues, String format, String defaultvalue) {
+	public ApiParamDoc(String name, String description, String type, String required, String[] allowedvalues, String format) {
 		super();
 		this.name = name;
 		this.description = description;
-		this.jsondocType = jsondocType;
+		this.type = type;
 		this.required = required;
 		this.allowedvalues = allowedvalues;
 		this.format = format;
-		this.defaultvalue = defaultvalue;
 	}
 
-	public static ApiParamDoc buildFromAnnotation(ApiPathParam annotation, JSONDocType jsondocType, ApiParamType paramType) {
-		return new ApiParamDoc(annotation.name(), annotation.description(), jsondocType, "true", annotation.allowedvalues(), annotation.format(), null);
+	public static List<ApiParamDoc> getApiParamDocs(Method method, ApiParamType paramType) {
+		List<ApiParamDoc> docs = new ArrayList<ApiParamDoc>();
+		Annotation[][] parametersAnnotations = method.getParameterAnnotations();
+		for (int i = 0; i < parametersAnnotations.length; i++) {
+			for (int j = 0; j < parametersAnnotations[i].length; j++) {
+				if (parametersAnnotations[i][j] instanceof ApiParam) {
+					ApiParamDoc apiParamDoc = buildFromAnnotation((ApiParam) parametersAnnotations[i][j], getParamObjects(method, i), paramType);
+					if(apiParamDoc != null) {
+						docs.add(apiParamDoc);
+					}
+				}
+			}
+		}
+
+		return docs;
 	}
 
-	public static ApiParamDoc buildFromAnnotation(ApiQueryParam annotation, JSONDocType jsondocType, ApiParamType paramType) {
-		return new ApiParamDoc(annotation.name(), annotation.description(), jsondocType, String.valueOf(annotation.required()), annotation.allowedvalues(), annotation.format(), annotation.defaultvalue());
+	private static String getParamObjects(Method method, Integer index) {
+		Class<?> parameter = method.getParameterTypes()[index];
+		Type generic = method.getGenericParameterTypes()[index];
+		if (Collection.class.isAssignableFrom(parameter)) {
+			if (generic instanceof ParameterizedType) {
+				ParameterizedType parameterizedType = (ParameterizedType) generic;
+				Type type = parameterizedType.getActualTypeArguments()[0];
+				if(type instanceof WildcardType) {
+					return JSONDocUtils.WILDCARD;
+				}
+				Class<?> clazz = (Class<?>) type;
+				return JSONDocUtils.getObjectNameFromAnnotatedClass(clazz);
+			} else {
+				return JSONDocUtils.UNDEFINED;
+			}
+		} else if (method.getReturnType().isArray()) {
+			Class<?> classArr = parameter;
+			return JSONDocUtils.getObjectNameFromAnnotatedClass(classArr.getComponentType());
+
+		}
+		return JSONDocUtils.getObjectNameFromAnnotatedClass(parameter);
 	}
 
-	public JSONDocType getJsondocType() {
-		return jsondocType;
+	public static ApiParamDoc buildFromAnnotation(ApiParam annotation, String type, ApiParamType paramType) {
+		if(annotation.paramType().equals(paramType)) {
+			return new ApiParamDoc(annotation.name(), annotation.description(), type, String.valueOf(annotation.required()), annotation.allowedvalues(), annotation.format());
+		}
+		return null;
+	}
+
+	public ApiParamDoc() {
+		super();
+	}
+
+	public String getType() {
+		return type;
 	}
 
 	public String getName() {
@@ -57,64 +105,6 @@ public class ApiParamDoc extends AbstractDoc implements Comparable<ApiParamDoc> 
 
 	public String getFormat() {
 		return format;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public void setRequired(String required) {
-		this.required = required;
-	}
-
-	public void setAllowedvalues(String[] allowedvalues) {
-		this.allowedvalues = allowedvalues;
-	}
-
-	public void setFormat(String format) {
-		this.format = format;
-	}
-
-	public String getDefaultvalue() {
-		return defaultvalue;
-	}
-
-	public void setDefaultvalue(String defaultvalue) {
-		this.defaultvalue = defaultvalue;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		ApiParamDoc other = (ApiParamDoc) obj;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else if (!name.equals(other.name))
-			return false;
-		return true;
-	}
-
-	@Override
-	public int compareTo(ApiParamDoc o) {
-		return this.name.compareTo(o.getName());
 	}
 
 }

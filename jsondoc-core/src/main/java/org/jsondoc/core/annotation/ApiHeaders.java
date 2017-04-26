@@ -7,24 +7,21 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation is to be used on your method and contains an array of
- * ApiHeader
- * 
+ * This annotation is to be used on your method and contains an array of ApiHeade
  * @see ApiHeader
  * @author Fabio Maffioletti
  *
  */
 @Documented
-@Target(value = { ElementType.TYPE, ElementType.METHOD })
+@Target(value=ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ApiHeaders {
 
 	/**
 	 * An array of ApiHeader annotations
-	 * 
 	 * @see ApiHeader
 	 * @return
 	 */
 	public ApiHeader[] headers();
-
+	
 }

@@ -1,114 +1,56 @@
 package org.jsondoc.core.pojo;
 
-import java.util.Set;
-import java.util.TreeSet;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
-public class ApiObjectDoc extends AbstractDoc implements Comparable<ApiObjectDoc> {
-	public final String jsondocId = UUID.randomUUID().toString();
+import org.jsondoc.core.annotation.ApiObject;
+import org.jsondoc.core.annotation.ApiObjectField;
 
+public class ApiObjectDoc implements Comparable<ApiObjectDoc> {
+	public String jsondocId = UUID.randomUUID().toString();
 	private String name;
 	private String description;
-	private Set<ApiObjectFieldDoc> fields;
-	private ApiVersionDoc supportedversions;
-	private String[] allowedvalues;
-	private String group;
-	private ApiVisibility visibility;
-	private ApiStage stage;
-	private JSONDocTemplate jsondocTemplate;
-	private boolean show;
+	private List<ApiObjectFieldDoc> fields;
+	
+	@SuppressWarnings("rawtypes")
+	public static ApiObjectDoc buildFromAnnotation(ApiObject annotation, Class clazz) {
+		List<ApiObjectFieldDoc> fieldDocs = new ArrayList<ApiObjectFieldDoc>();
+		for (Field field : clazz.getDeclaredFields()) {
+			if (field.getAnnotation(ApiObjectField.class) != null) {
+				fieldDocs.add(ApiObjectFieldDoc.buildFromAnnotation(field.getAnnotation(ApiObjectField.class), field));
+			}
+		}
 
-	public ApiObjectDoc() {
-		this.name = "";
-		this.description = "";
-		this.supportedversions = null;
-		this.allowedvalues = new String[] {};
-		this.fields = new TreeSet<ApiObjectFieldDoc>();
-		this.group = "";
-		this.visibility = ApiVisibility.UNDEFINED;
-		this.stage = ApiStage.UNDEFINED;
-		this.jsondocTemplate = null;
-		this.show = true;
+		Class<?> c = clazz.getSuperclass();
+		if (c != null) {
+			if (c.isAnnotationPresent(ApiObject.class)) {
+				ApiObjectDoc objDoc = ApiObjectDoc.buildFromAnnotation(c.getAnnotation(ApiObject.class), c);
+				fieldDocs.addAll(objDoc.getFields());
+			}
+		}
+
+		return new ApiObjectDoc(annotation.name(), annotation.description(), fieldDocs);
+	}
+
+	public ApiObjectDoc(String name, String description, List<ApiObjectFieldDoc> fields) {
+		super();
+		this.name = name;
+		this.description = description;
+		this.fields = fields;
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	public String getDescription() {
 		return description;
 	}
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public Set<ApiObjectFieldDoc> getFields() {
+	public List<ApiObjectFieldDoc> getFields() {
 		return fields;
-	}
-
-	public void setFields(Set<ApiObjectFieldDoc> fields) {
-		this.fields = fields;
-	}
-
-	public ApiVersionDoc getSupportedversions() {
-		return supportedversions;
-	}
-
-	public void setSupportedversions(ApiVersionDoc supportedversions) {
-		this.supportedversions = supportedversions;
-	}
-
-	public String[] getAllowedvalues() {
-		return allowedvalues;
-	}
-
-	public void setAllowedvalues(String[] allowedvalues) {
-		this.allowedvalues = allowedvalues;
-	}
-
-	public String getGroup() {
-		return group;
-	}
-
-	public void setGroup(String group) {
-		this.group = group;
-	}
-
-	public JSONDocTemplate getJsondocTemplate() {
-		return jsondocTemplate;
-	}
-
-	public void setJsondocTemplate(JSONDocTemplate jsondocTemplate) {
-		this.jsondocTemplate = jsondocTemplate;
-	}
-
-	public ApiVisibility getVisibility() {
-		return visibility;
-	}
-
-	public void setVisibility(ApiVisibility visibility) {
-		this.visibility = visibility;
-	}
-
-	public ApiStage getStage() {
-		return stage;
-	}
-
-	public void setStage(ApiStage stage) {
-		this.stage = stage;
-	}
-
-	public boolean isShow() {
-		return show;
-	}
-
-	public void setShow(boolean show) {
-		this.show = show;
 	}
 
 	@Override

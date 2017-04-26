@@ -1,111 +1,84 @@
 package org.jsondoc.core.pojo;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
-import org.jsondoc.core.pojo.JSONDoc.MethodDisplay;
+import org.jsondoc.core.annotation.ApiMethod;
 
-import com.google.common.collect.Sets;
-
-public class ApiMethodDoc extends AbstractDoc implements Comparable<ApiMethodDoc> {
-	public final String jsondocId = UUID.randomUUID().toString();
-
-	private Set<String> path;
-	private String method;
-	private Set<ApiVerb> verb;
-	private Set<String> produces;
-	private Set<String> consumes;
-	private Set<ApiHeaderDoc> headers;
-	private Set<ApiParamDoc> pathparameters;
-	private Set<ApiParamDoc> queryparameters;
+public class ApiMethodDoc {
+	public String jsondocId = UUID.randomUUID().toString();
+	private String path;
+	private String description;
+	private List<String> invocationExamples;
+	private ApiVerb verb;
+	private List<String> produces;
+	private List<String> consumes;
+	private List<ApiHeaderDoc> headers;
+	private List<ApiParamDoc> pathparameters;
+	private List<ApiParamDoc> queryparameters;
 	private ApiBodyObjectDoc bodyobject;
 	private ApiResponseObjectDoc response;
-	private String responsestatuscode;
-	private ApiVisibility visibility;
-	private ApiStage stage;
-
-	private String id;
-	private String description;
-	private String summary;
-
 	private List<ApiErrorDoc> apierrors;
-	private ApiVersionDoc supportedversions;
-	private ApiAuthDoc auth;
-	private MethodDisplay displayMethodAs;
+
+	public static ApiMethodDoc buildFromAnnotation(ApiMethod annotation) {
+		ApiMethodDoc apiMethodDoc = new ApiMethodDoc();
+		apiMethodDoc.setPath(annotation.path());
+		apiMethodDoc.setDescription(annotation.description());
+		apiMethodDoc.setInvocationExamples(Arrays.asList(annotation.invocationExamples()));
+		apiMethodDoc.setVerb(annotation.verb());
+		apiMethodDoc.setConsumes(Arrays.asList(annotation.consumes()));
+		apiMethodDoc.setProduces(Arrays.asList(annotation.produces()));
+		return apiMethodDoc;
+	}
 
 	public ApiMethodDoc() {
 		super();
-		this.id = null;
-		this.description = "";
-		this.summary = "";
-		this.path = new LinkedHashSet<String>();
-		this.verb = new LinkedHashSet<ApiVerb>();
-		this.produces = new LinkedHashSet<String>();
-		this.consumes = new LinkedHashSet<String>();
-		this.headers = new LinkedHashSet<ApiHeaderDoc>();
-		this.pathparameters = new LinkedHashSet<ApiParamDoc>();
-		this.queryparameters = new LinkedHashSet<ApiParamDoc>();
-		this.bodyobject = null;
-		this.response = null;
-		this.responsestatuscode = "";
-		this.visibility = ApiVisibility.UNDEFINED;
-		this.stage = ApiStage.UNDEFINED;
+		this.headers = new ArrayList<ApiHeaderDoc>();
+		this.pathparameters = new ArrayList<ApiParamDoc>();
+		this.queryparameters = new ArrayList<ApiParamDoc>();
 		this.apierrors = new ArrayList<ApiErrorDoc>();
-		this.supportedversions = null;
-		this.auth = null;
-		this.displayMethodAs = MethodDisplay.URI;
 	}
 
-	public Set<ApiHeaderDoc> getHeaders() {
+	public List<ApiHeaderDoc> getHeaders() {
 		return headers;
 	}
 
-	public void setHeaders(Set<ApiHeaderDoc> headers) {
+	public void setHeaders(List<ApiHeaderDoc> headers) {
 		this.headers = headers;
 	}
 
-	public Set<String> getProduces() {
+	public List<String> getProduces() {
 		return produces;
 	}
 
-	public void setProduces(Set<String> produces) {
+	public void setProduces(List<String> produces) {
 		this.produces = produces;
 	}
 
-	public Set<String> getConsumes() {
+	public List<String> getConsumes() {
 		return consumes;
 	}
 
-	public void setConsumes(Set<String> consumes) {
+	public void setConsumes(List<String> consumes) {
 		this.consumes = consumes;
 	}
 
-	public Set<ApiVerb> getVerb() {
+	public ApiVerb getVerb() {
 		return verb;
 	}
 
-	public void setVerb(Set<ApiVerb> verb) {
+	public void setVerb(ApiVerb verb) {
 		this.verb = verb;
 	}
 
-	public Set<String> getPath() {
+	public String getPath() {
 		return path;
 	}
 
-	public void setPath(Set<String> path) {
+	public void setPath(String path) {
 		this.path = path;
-	}
-	
-	public String getMethod() {
-		return method;
-	}
-	
-	public void setMethod(String method) {
-		this.method = method;
 	}
 
 	public String getDescription() {
@@ -115,20 +88,28 @@ public class ApiMethodDoc extends AbstractDoc implements Comparable<ApiMethodDoc
 	public void setDescription(String description) {
 		this.description = description;
 	}
-
-	public Set<ApiParamDoc> getPathparameters() {
+	
+	public void setInvocationExamples(List<String> invocationExamples) {
+		this.invocationExamples = invocationExamples;
+	}
+	
+	public List<String> getInvocationExamples() {
+		return invocationExamples;
+	}
+	
+	public List<ApiParamDoc> getPathparameters() {
 		return pathparameters;
 	}
 
-	public void setPathparameters(Set<ApiParamDoc> pathparameters) {
+	public void setPathparameters(List<ApiParamDoc> pathparameters) {
 		this.pathparameters = pathparameters;
 	}
 
-	public Set<ApiParamDoc> getQueryparameters() {
+	public List<ApiParamDoc> getQueryparameters() {
 		return queryparameters;
 	}
 
-	public void setQueryparameters(Set<ApiParamDoc> queryparameters) {
+	public void setQueryparameters(List<ApiParamDoc> queryparameters) {
 		this.queryparameters = queryparameters;
 	}
 
@@ -154,119 +135,6 @@ public class ApiMethodDoc extends AbstractDoc implements Comparable<ApiMethodDoc
 
 	public void setApierrors(List<ApiErrorDoc> apierrors) {
 		this.apierrors = apierrors;
-	}
-
-	public ApiVersionDoc getSupportedversions() {
-		return supportedversions;
-	}
-
-	public void setSupportedversions(ApiVersionDoc supportedversions) {
-		this.supportedversions = supportedversions;
-	}
-
-	public ApiAuthDoc getAuth() {
-		return auth;
-	}
-
-	public void setAuth(ApiAuthDoc auth) {
-		this.auth = auth;
-	}
-
-	public String getResponsestatuscode() {
-		return responsestatuscode;
-	}
-
-	public void setResponsestatuscode(String responsestatuscode) {
-		this.responsestatuscode = responsestatuscode;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public String getSummary() {
-		return summary;
-	}
-
-	public void setSummary(String summary) {
-		this.summary = summary;
-	}
-
-	public MethodDisplay getDisplayMethodAs() {
-		return displayMethodAs;
-	}
-
-	public void setDisplayMethodAs(MethodDisplay displayMethodAs) {
-		this.displayMethodAs = displayMethodAs;
-	}
-
-	public Set<String> getDisplayedMethodString() {
-		switch (displayMethodAs) {
-		case URI:
-			return path;
-		case SUMMARY:
-			return Sets.newHashSet(summary);
-		case METHOD:
-			return Sets.newHashSet(method);
-		default:
-			return path;
-		}
-	}
-
-	public ApiVisibility getVisibility() {
-		return visibility;
-	}
-
-	public void setVisibility(ApiVisibility visibility) {
-		this.visibility = visibility;
-	}
-
-	public ApiStage getStage() {
-		return stage;
-	}
-
-	public void setStage(ApiStage stage) {
-		this.stage = stage;
-	}
-
-	@Override
-	public int compareTo(ApiMethodDoc o) {
-		int i;
-		
-		if (this.path.containsAll(o.getPath()) && this.path.size() == o.getPath().size()) {
-			i = 0;
-		} else {
-			i = 1;
-		}
-		
-		if (i != 0)
-			return i;
-
-		if (this.verb.containsAll(o.getVerb()) && this.verb.size() == o.getVerb().size()) {
-			i = 0;
-		} else {
-			i = 1;
-		}
-
-		if (i != 0)
-			return i;
-
-		if (this.queryparameters.size() == o.getQueryparameters().size()) {
-			Set<ApiParamDoc> bothQueryParameters = new HashSet<ApiParamDoc>();
-			bothQueryParameters.addAll(this.queryparameters);
-			bothQueryParameters.addAll(o.getQueryparameters());
-			if (bothQueryParameters.size() > this.queryparameters.size()) {
-				i = 1;
-			}
-		} else {
-			i = 1;
-		}
-
-		return i;
 	}
 
 }

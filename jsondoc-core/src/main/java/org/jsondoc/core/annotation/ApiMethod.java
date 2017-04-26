@@ -6,9 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.jsondoc.core.pojo.ApiStage;
 import org.jsondoc.core.pojo.ApiVerb;
-import org.jsondoc.core.pojo.ApiVisibility;
 
 /**
  * This annotation is to be used on your exposed methods.
@@ -19,38 +17,32 @@ import org.jsondoc.core.pojo.ApiVisibility;
 @Target(value=ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ApiMethod {
-	
-	/**
-	 * A custom identifier to be used inside JSONDoc. This string has to be unique inside the JSONDoc documentation.
-	 * It's responsibility of the documentation writer to guarantee this uniqueness
-	 * @return
-	 */
-	public String id() default "";
 
 	/**
 	 * The relative path for this method (ex. /country/get/{name})
 	 * @return
 	 */
-	public String[] path() default {};
-
-	/**
-	 * A summary of what the method does. It's like a short description.
-	 * @return
-	 */
-	public String summary() default "";
+	public String path();
 
 	/**
 	 * A description of what the method does
 	 * @return
 	 */
-	public String description() default "";
+	public String description();
+	
 	
 	/**
-	 * The request verb for this method. Defaults to "GET"
+	 * An Array of strings representing invocation examples
+	 * @return
+	 */
+	public String[] invocationExamples() default {};
+	
+	/**
+	 * The request verb (or method), to be filled with an ApiVerb value (GET, POST, PUT, DELETE)
 	 * @see ApiVerb
 	 * @return
 	 */
-	public ApiVerb[] verb() default ApiVerb.GET;
+	public ApiVerb verb();
 	
 	/**
 	 * An array of strings representing media types produced by the method, like application/json, application/xml, ...
@@ -63,22 +55,5 @@ public @interface ApiMethod {
 	 * @return
 	 */
 	public String[] consumes() default {};
-	
-	/**
-	 * Response status code that this method will return to the caller. Defaults to 200
-	 */
-	public String responsestatuscode() default "200 - OK";
-	
-	/**
-	 * Indicates the visibility of the method
-	 * @return
-	 */
-	public ApiVisibility visibility() default ApiVisibility.UNDEFINED;
-
-	/**
-	 * Indicates the stage of development or release
-	 * @return
-	 */
-	public ApiStage stage() default ApiStage.UNDEFINED;
 	
 }

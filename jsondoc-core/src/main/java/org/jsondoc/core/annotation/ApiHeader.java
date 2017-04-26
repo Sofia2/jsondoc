@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  *
  */
 @Documented
-@Target(value = { ElementType.ANNOTATION_TYPE, ElementType.PARAMETER })
+@Target(value = ElementType.ANNOTATION_TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ApiHeader {
 
@@ -21,18 +21,12 @@ public @interface ApiHeader {
 	 * The name of the header parameter
 	 * @return
 	 */
-	public String name() default "";
+	public String name();
 
 	/**
-	 * A description of what the header is needed for
+	 * A description of what the parameter is needed for
 	 * @return
 	 */
-	public String description() default "";
-	
-	/**
-	 * An array representing the allowed values this header can have. Default value is *
-	 * @return
-	 */
-	public String[] allowedvalues() default {};
+	public String description();
 	
 }
